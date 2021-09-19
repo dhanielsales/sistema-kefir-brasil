@@ -1,6 +1,7 @@
 module.exports = {
   resolve: {
-    extensions: ['.ts', '.js']
+    extensions: ['.ts', '.js'],
+    fallback: { "path": require.resolve("path-browserify") }
   },
   entry: './electron/main.ts',
   module: {

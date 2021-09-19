@@ -7,8 +7,9 @@ export const Container = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease-in-out;
 
-  background: #8257e6;
+  background: #348feb;
   border-radius: 8px;
   border: 0;
 

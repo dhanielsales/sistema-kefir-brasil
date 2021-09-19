@@ -1,12 +1,14 @@
-import { GlobalStyle } from './styles/GlobalStyle'
+import Root from './pages/Root'
+import Teste from './pages/Teste'
 
-import { Greetings } from './components/Greetings'
+import ThemeContainer from './contexts/theme/ThemeContainer'
 
 export function App() {
   return (
     <>
-      <GlobalStyle />
-      <Greetings />
+      <ThemeContainer>
+        <Teste />
+      </ThemeContainer>
     </>
   )
 }
