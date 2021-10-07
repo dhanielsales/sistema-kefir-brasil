@@ -3,7 +3,8 @@ export function cleanSpaces(str: string): string {
 }
 
 export function includeSpace(qty: number) {
-  return '&nbsp;'.repeat(qty);
+  // return '&nbsp;'.repeat(qty);
+  return ' '.repeat(qty);
 }
 
 export function centralizeText(text: string, maxCharLine = 47): string {
@@ -31,7 +32,7 @@ export function formatProductsHeader(maxCharLine = 47) {
     Number(qtdField.length) +
     Number(vlUnitField.length) +
     Number(vlTotalField.length);
-  return `${includeSpace(maxCharLine - (Number(lengthLine) + 13))}${itemField}${includeSpace(3)}${qtdField}${includeSpace(5)}${vlUnitField}${includeSpace(5)}${vlTotalField}<br>`;
+  return `${itemField}${includeSpace(3)}${qtdField}${includeSpace(5)}${vlUnitField}${includeSpace(5)}${vlTotalField}`;
 }
 
 export function formatAmount(amount: string, maxCharAmount = 8) {
@@ -57,5 +58,6 @@ export function formatAddress(addressText: string, addressLabelLength = 0, maxCh
     currentLine+= 1
   }
 
-  return lines.join("<br />")
+  // return lines.join("<br />")
+  return lines.join("\n    ")
 }

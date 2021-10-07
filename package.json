@@ -18,8 +18,12 @@
     "@chakra-ui/react": "^1.0.4",
     "@emotion/react": "^11.1.4",
     "@emotion/styled": "^11.0.0",
+    "@types/html-pdf": "^2.2.1",
+    "assert": "^2.0.0",
     "framer-motion": "^3.1.1",
+    "html-pdf": "^3.0.1",
     "path-browserify": "^1.0.1",
+    "pdf-lib": "^1.16.0",
     "react": "17.0.2",
     "react-dom": "17.0.2",
     "react-hot-loader": "4.13.0",
@@ -71,6 +75,7 @@
     "forge": {
       "packagerConfig": {
         "name": "sistema-kefir-brasil",
+        "icon": "./assets/icon.png",
         "executableName": "sistema-kefir-brasil",
         "extraResource": [
           "assets"
@@ -101,7 +106,7 @@
         {
           "name": "@electron-forge/maker-squirrel",
           "config": {
-            "name": "Electron Starter"
+            "name": "sistema-kefir-brasil"
           }
         },
         {

@@ -8,7 +8,7 @@ interface CreatePDFProps {
   trader: Trader;
 }
 
-export function CreatePDF({order, client, trader, type = "plain_text"}: CreatePDFProps) {
+export function createContent({order, client, trader, type = "plain_text"}: CreatePDFProps) {
   const method = createPdfTypes[Types.PLAIN_TEXT]
   
   const content = method(order, client, trader)
