@@ -21,3 +21,26 @@ export function capitalize(value: string): string {
   value = String(value);
   return value.replace(/\w\S*/g, (w) => w.replace(/^\w/, (c) => c.toUpperCase()));
 }
+
+export function amount(value: string): number {
+  return Number(parseFloat(value.replace(/,/g, '.')).toFixed(2))
+}
+
+// (00) 00000-0000
+export function phoneMask(value: string): string {
+  let valueOnlyNumbers = onlyNumbers(value);
+
+  if (valueOnlyNumbers.length === 10) {
+      return valueOnlyNumbers
+      .replace(/(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{4})(\d)/, '$1-$2')
+      .replace(/(-\d{4})\d+?$/, '$1')
+      .replace(' ', '');
+  } else {  
+    return valueOnlyNumbers
+      .replace(/(\d{2})(\d)/, '($1) $2')
+      .replace(/(\d{5})(\d)/, '$1-$2')
+      .replace(/(-\d{4})\d+?$/, '$1')
+      .replace(' ', '');
+  }
+}

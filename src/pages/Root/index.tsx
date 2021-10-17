@@ -1,55 +1,130 @@
 import { Box, Button, Input, Spinner, Text, useDisclosure } from '@chakra-ui/react';
 import React, { useCallback, useRef, useState } from 'react';
 import { BiSpreadsheet } from 'react-icons/bi';
-import { MdFileDownload } from 'react-icons/md';
+import { MdFileDownload, MdCreateNewFolder } from 'react-icons/md';
 import { read, utils, writeFile } from 'xlsx';
+
+import { format } from 'date-fns';
 
 import { Modal } from '../../components/Model';
 import { delay } from '../../utils/delay';
-import { cepMask } from '../../utils/formatStrings';
+import { amount, cepMask, phoneMask } from '../../utils/formatStrings';
+
+import { createContent } from '../../utils/print/createContent';
+import { Client, Order, Trader, Product } from '../../utils/print/types';
+
+const fs = window.require("fs");
+const path = window.require("path");
+const childProcess = window.require('child_process')
+
+import createFolder from '../../utils/createFolder';
+import createPDF from '../../utils/createPDF';
+import { values } from '../../../webpack/rules.webpack';
 
 enum FILE_SUBTYPES {
   XLSX = 'vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+}
+
+const trader: Trader = {
+  name: "Kefir Brasil",
+  phone: "(85) 99988-7766",
+  site: "www.lojakefirbr.com"
+}
+
+interface OrderList {
+  [key: string]: Order
 }
 
 const Home: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [haveFile, setHaveFile] = useState<boolean>(false);
   const [formatedData, setFormatedData] = useState<string[][]>();
-  const [formatedDataWithStatus, setFormatedDataWithStatus] = useState<string[][]>();
+  const [formatedDataForPDFs, setFormatedDataForPDFs] = useState<OrderList>();
   const inputRef = useRef<any>(null);
 
   const { isOpen, onOpen, onClose } = useDisclosure();
 
   const handleValidateFile = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files[0];
-    const subtype = file.type.split('/')[1];
+    const files = event.target.files;
+    
+    if (files && files.length > 0) {
+      const file = files[0];
+      const subtype = file.type.split('/')[1];
 
-    if (subtype !== FILE_SUBTYPES.XLSX) {
-      inputRef.current.value = '';
-      onOpen();
-      setHaveFile(false);
-    } else {
-      setHaveFile(true);
+      if (subtype !== FILE_SUBTYPES.XLSX) {
+        inputRef.current.value = '';
+        onOpen();
+        setHaveFile(false);
+      } else {
+        setHaveFile(true);
+      }
     }
   };
 
   const handleFormatData = useCallback(async (data: unknown[]) => {
     const formatedData: string[][] = [];
     const formatedDataWithStatus: string[][] = [];
+    let currentOrder: Order;
+    const orders: OrderList = {};
 
     data.forEach((value: any) => {
       const status = value[2];
       const nome = value[4];
-      const cep = cepMask(value[16]);
       const logradouro = value[9];
       const numero = value[10];
       const complemento = value[11];
       const bairro = value[12];
       const cidade = value[13];
       const estado = value[14];
+      const cep = cepMask(value[16]);
 
+      const orderId = Number(value[0]);
+      const frete = amount(value[17]); // Sem uso por enquanto TODO: Tirar dúvida se tem vendas com frete
+      const subtotal = amount(value[18]);
+      const discount = amount(value[19]);
+      const paymentMethod = value[26];
+      
+      const idProd = Number(value[20]);
+      const nomeProd = value[21];
+      const valorProd = amount(value[22]);
+      const qtdeProd = value[23];
+
+      const nomeClient = value[4]
+      const addressClient = `${value[9]} ${value[10]}, ${value[11] ? value[11] : ''}, ${value[12]}, ${value[13]} - ${value[14]} ${cepMask(value[16])}`
+      const phoneClient = phoneMask(value[7])      
+      
       if (status === 'Aguardando envio') {
+        if (currentOrder?.id === orderId) {
+          currentOrder.products.push({
+            id: idProd,
+            name: nomeProd,
+            amount: valorProd,
+            quantity: qtdeProd,
+          })
+        } else {
+          currentOrder = {
+            id: orderId,
+            discount,
+            paymentMethod,
+            client: {
+              name: nomeClient,
+              address: addressClient,
+              phone: phoneClient
+            },
+            total: amount(String(subtotal + discount)),
+            subtotal,
+            products: [
+              {
+                id: idProd,
+                name: nomeProd,
+                amount: valorProd,
+                quantity: qtdeProd,
+              }
+            ]
+          }
+        }
+        orders[orderId] = currentOrder;
+
         formatedData.push([nome, cep, logradouro, numero, complemento, bairro, cidade, estado]);
         formatedDataWithStatus.push([
           status,
@@ -65,11 +140,45 @@ const Home: React.FC = () => {
       }
     });
 
-    await delay(2000);
+    // console.log(`orders ${JSON.stringify(orders)}`)
+
+    await delay(1000);
     setLoading(false);
     setFormatedData(formatedData);
-    setFormatedDataWithStatus(formatedDataWithStatus);
+    setFormatedDataForPDFs(orders)
+
+    await handlePDFs(orders)
   }, []);
+
+  const handlePDFs = useCallback(async (orderList: OrderList) => {
+    const currentPath = process.cwd();
+    const pdfFolder = path.join(currentPath, 'pdf');
+    // const pdfFolder = `${currentPath}\\pdf`;
+    const currentDayFolder = path.join(pdfFolder, `${format(new Date(), 'dd-MM-yyyy')}`);
+
+    console.log(currentDayFolder)
+
+    createFolder(currentDayFolder)
+
+    for (const [key, value] of Object.entries(orderList)) {
+      const content = await createContent({
+        client: value.client,
+        order: value, 
+        trader
+      })
+      
+      const file = path.join(currentDayFolder, `${key}.pdf`);
+  
+      // Prod - Copiar Assets para dentro de 
+      const imagePath = path.join(__dirname, "..", "..", "..", "..", "assets", "logo.png");
+      
+      // Dev
+      // const imagePath = path.join(__dirname, "..", "..", "..", "..", "..", "..", "assets", "logo.png");
+      
+      const imageBuffer = fs.readFileSync(imagePath);
+      await createPDF(content, file, imageBuffer);
+    }
+}, [])
 
   const handleFileUpload = () => {
     setLoading(true);
@@ -97,10 +206,12 @@ const Home: React.FC = () => {
   };
 
   const handleReset = () => {
+    console.log(formatedDataForPDFs)
+
     setLoading(false);
     setHaveFile(false);
     setFormatedData(undefined);
-    setFormatedDataWithStatus(undefined);
+    setFormatedDataForPDFs(undefined)
   }
 
   return (
@@ -128,15 +239,16 @@ const Home: React.FC = () => {
               />
             </>
           )}
-          {false && (
-          // {!loading && !formatedData && (
+          {!loading && !formatedData && (
             <>
               <Text fontSize="xl" marginBottom="10px" fontWeight="bold">
                 Formatador de planilha
               </Text>
+
               <Text fontSize="md" textAlign="center">
                 Adicione sua planilha para converter os dados dela no formato desejado
               </Text>
+
               <Input
                 type="file"
                 name="file"
@@ -147,6 +259,7 @@ const Home: React.FC = () => {
                 ref={inputRef}
                 onChange={handleValidateFile}
               />
+
               <Button
                 marginTop="30px"
                 rightIcon={<BiSpreadsheet />}
@@ -159,32 +272,43 @@ const Home: React.FC = () => {
               </Button>
             </>
           )}
-          {/* {!!formatedData && !!formatedDataWithStatus && !loading && (  */}
-          {true && (
+          {!!formatedData && !!formatedDataForPDFs && !loading && (
             <>
               <Text fontSize="xl" textAlign="center">
-                Planilha formatada com sucesso!
+                Processo concluído! <br />
+                Planilha formatada com sucesso! <br />
+                PDFs gerados com sucesso!
               </Text>
-              {/* <Button
-                rightIcon={<MdFileDownload />}
-                onClick={() =>
-                  handleCreateFile(formatedDataWithStatus, 'ped-aguard-envio-status.xlsx')
-                }
-                colorScheme="blue"
-                marginTop="20px"
-              >
-                Baixar planilha com Status
-              </Button> */}
+
               <Button
                 rightIcon={<MdFileDownload />}
-                onClick={() => handleCreateFile(formatedData, 'ped-aguard-envio.xlsx')}
+                onClick={() => formatedData && handleCreateFile(formatedData, 'ped-aguard-envio.xlsx')}
                 colorScheme="blue"
                 marginTop="20px"
               >
                 Baixar planilha para importação
               </Button>
 
-              <Text fontSize="md" textAlign="center" onClick={handleReset} marginTop="20px">
+              <Button
+                rightIcon={<MdCreateNewFolder />}
+                onClick={() => childProcess.exec(`explorer.exe "${process.cwd()}\\pdf"`)}
+                colorScheme="blue"
+                marginTop="20px"
+              >
+                Abrir pasta com PDFs
+              </Button>
+
+              <Text 
+                fontSize="md" 
+                textAlign="center" 
+                onClick={handleReset} 
+                marginTop="20px" 
+                textDecoration="underline" 
+                cursor="pointer" 
+                transition="all .2s" 
+                fontWeight="bold" 
+                _hover={{color: "#3182CE"}}
+              >
                 Voltar
               </Text>
             </>

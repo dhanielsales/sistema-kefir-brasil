@@ -1,4 +1,4 @@
-import { PDFDocument, PDFPage, rgb, PDFPageDrawTextOptions } from 'pdf-lib';
+import { PDFDocument, PDFPage, rgb, StandardFonts } from 'pdf-lib';
 const fs = window.require('fs');
 
 export default async function createPDF(content: string, filePath: string, image?: Buffer) {
@@ -16,11 +16,14 @@ export default async function createPDF(content: string, filePath: string, image
 
 async function addContent(text: string, page: PDFPage, pdfDoc: PDFDocument) {
     const { height } = page.getSize();
+    const font = await pdfDoc.embedFont(StandardFonts.CourierBold);
 
     page.drawText(text, {
         lineHeight: 15,
         y: height - 4 * 35,
+        x: 0,
         size: 12,
+        font,
         color: rgb(0, 0, 0)
     });
 }
@@ -32,7 +35,7 @@ async function addImage(image: Buffer, page: PDFPage, pdfDoc: PDFDocument) {
 
     page.drawImage(embeddedImage, {
         y: height - 4 * 27,
-        x: 13,
+        x: 105,
         width: imageDimension.width,
         height: imageDimension.height,
     });

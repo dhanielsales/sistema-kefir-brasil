@@ -1,11 +1,13 @@
-interface Product {
+export interface Product {
+  id?: string | number;
   name: string;
   quantity: number;
   amount: number;
 }
 
 export interface Order {
-  id: string;
+  client: Client;
+  id: number;
   products: Product[];
   total: number;
   subtotal: number;
