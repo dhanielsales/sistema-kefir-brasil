@@ -95,10 +95,12 @@ const Home: React.FC = () => {
       
       if (status === 'Aguardando envio') {
         if (currentOrder?.id === orderId) {
+          currentOrder.subtotal += valorProd + discount
+          currentOrder.total += valorProd + discount
           currentOrder.products.push({
             id: idProd,
             name: nomeProd,
-            amount: valorProd,
+            amount: valorProd + discount,
             quantity: qtdeProd,
           })
         } else {
@@ -111,13 +113,13 @@ const Home: React.FC = () => {
               address: addressClient,
               phone: phoneClient
             },
-            total: amount(String(subtotal + discount)),
-            subtotal,
+            total: amount(String(valorProd + discount)),
+            subtotal:  amount(String(valorProd + discount)),
             products: [
               {
                 id: idProd,
                 name: nomeProd,
-                amount: valorProd,
+                amount: valorProd + discount,
                 quantity: qtdeProd,
               }
             ]
@@ -153,7 +155,6 @@ const Home: React.FC = () => {
   const handlePDFs = useCallback(async (orderList: OrderList) => {
     const currentPath = process.cwd();
     const pdfFolder = path.join(currentPath, 'pdf');
-    // const pdfFolder = `${currentPath}\\pdf`;
     const currentDayFolder = path.join(pdfFolder, `${format(new Date(), 'dd-MM-yyyy')}`);
 
     console.log(currentDayFolder)

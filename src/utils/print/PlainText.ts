@@ -37,11 +37,14 @@ ${formatProductsHeader()}
     
     let productData = `# ${product.name.substring(0, maxCharProds).toLowerCase()}`;
 
+    console.log("productData", productData)
     if (productData.length < maxCharProds + 2) {
       const diff = maxCharProds + 4 - productData.length
-      productData += includeSpace(diff + 2)
+      productData += includeSpace(diff)
+      console.log("if productData", productData)
     } else {
       productData += includeSpace(2)
+      console.log("else productData", productData)
     }
 
     productData += `${product.quantity}${includeSpace(2)}${productAmount}${includeSpace(2)}${productAmountTotalAmount}\n`;
@@ -55,7 +58,6 @@ ${formatProductsHeader()}
 function formatFooter(order: Order, trader: Trader, maxCharLine = 40) {
   const footer = `
 ${justifiyText('Total Produtos:', `${formatAmount(Number(order.total).toFixed(2))}`)}
-${justifiyText('Desconto:', `${formatAmount(Number(order.discount).toFixed(2))}`)}
 ${justifiyText('Subtotal:', `${formatAmount(Number(order.subtotal).toFixed(2))}`)}
 ${justifiyText('Total a pagar:', `${formatAmount(Number(order.subtotal).toFixed(2))}`)}
 ${justifiyText('Forma de pagamento:',`${order.paymentMethod.substring(0, 17)}`)}

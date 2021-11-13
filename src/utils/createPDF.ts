@@ -30,12 +30,12 @@ async function addContent(text: string, page: PDFPage, pdfDoc: PDFDocument) {
 
 async function addImage(image: Buffer, page: PDFPage, pdfDoc: PDFDocument) {
     const embeddedImage = await pdfDoc.embedPng(image);
-    const imageDimension = embeddedImage.scale(0.5)
+    const imageDimension = embeddedImage.scale(0.25)
     const { height } = page.getSize();
 
     page.drawImage(embeddedImage, {
         y: height - 4 * 27,
-        x: 105,
+        x: 90,
         width: imageDimension.width,
         height: imageDimension.height,
     });

@@ -23,7 +23,10 @@ export function capitalize(value: string): string {
 }
 
 export function amount(value: string): number {
-  return Number(parseFloat(value.replace(/,/g, '.')).toFixed(2))
+  if (value) {
+    return Number(parseFloat(value.replace(/,/g, '.')).toFixed(2))
+  }
+  return 0
 }
 
 // (00) 00000-0000
