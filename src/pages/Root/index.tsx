@@ -92,7 +92,7 @@ const Home: React.FC = () => {
       const nomeClient = value[4]
       const addressClient = `${value[9]} ${value[10]}, ${value[11] ? value[11] : ''}, ${value[12]}, ${value[13]} - ${value[14]} ${cepMask(value[16])}`
       const phoneClient = phoneMask(value[7])      
-      
+
       if (status === 'Aguardando envio') {
         if (currentOrder?.id === orderId) {
           currentOrder.subtotal += valorProd + discount

@@ -72,9 +72,13 @@ ou utiliza o starter enviado erroneamente,
 pois nesse caso haverá PERDA DE GARANTIA de 
 novo envio.
 
-${centralizeText(`${trader.name.toUpperCase()} - ${trader.site}`)}
+O valor cobrado refere-se INTEGRALMENTE as
+DESPESAS POSTAIS e ao serviço de ASSESSORIA 
+DE CULTIVO. Não trabalhamos com VENDA, 
+enviamos o Starter como DOAÇÃO, MEDIANTE 
+SOLICITAÇÃO DO SERVIÇO DE ASSESSORIA.
 
-. 
+${centralizeText(`${trader.name.toUpperCase()} - ${trader.site}`)}
 `
 
   return footer

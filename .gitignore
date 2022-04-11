@@ -3,4 +3,5 @@ dist
 packages
 .webpack
 out
-pdf
+pdf/
+.env
