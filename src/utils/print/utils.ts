@@ -11,28 +11,30 @@ export function includeSpace(qty: number) {
   }
 }
 
-export function centralizeText(text: string, maxCharLine = 40): string {
+export function centralizeText(text: string, maxCharLine = 43): string {
   const qtySpaces = (maxCharLine - text.length) / 2;
   return `${includeSpace(qtySpaces)}${text}${includeSpace(qtySpaces)}`;
 }
 
-export function alingRightText(text: string, maxCharLine = 40) {
+export function alingRightText(text: string, maxCharLine = 43) {
   const qtySpaces = maxCharLine - Number(text.replace(/&nbsp;/g, ' ').length);
   return `${includeSpace(qtySpaces)}${text}`;
 }
 
-export function justifiyText(textLeft: string, textRight: string, maxCharLine = 40) {
+export function justifiyText(textLeft: string, textRight: string, maxCharLine = 43) {
   const textLeftCount = Number(cleanSpaces(textLeft).length)
   const textRightCount = Number(cleanSpaces(textRight).length);
+  let qtySpaces = 0
 
-  let qtySpaces = maxCharLine - (textLeftCount + textRightCount);
+  qtySpaces = maxCharLine - (textLeftCount + textRightCount);
   if (qtySpaces < 0) {
     qtySpaces = maxCharLine - (textLeftCount + 17);
   }
+
   return `${textLeft}${includeSpace(qtySpaces)}${textRight}`;
 }
 
-export function formatProductsHeader(maxCharLine = 40) {
+export function formatProductsHeader(maxCharLine = 43) {
   const itemField = 'Item';
   const qtdField = 'Qtd';
   const vlUnitField = 'Vl Unit.';
@@ -45,7 +47,7 @@ export function formatAmount(amount: string, maxCharAmount = 6) {
   return `R$${includeSpace(qtySpaces)}${amount}`;
 }
 
-export function formatAddress(addressText: string, addressLabelLength = 0, maxCharLine = 40) {
+export function formatAddress(addressText: string, addressLabelLength = 0, maxCharLine = 43) {
   const lines = [];
   let currentAddressCharacters = 0
   let currentLine = 0

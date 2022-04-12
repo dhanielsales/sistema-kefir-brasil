@@ -1,7 +1,7 @@
 import { Client, Order, Trader } from './types';
-import { centralizeText, formatAddress, formatAmount, formatProductsHeader, includeSpace, justifiyText } from './utils'
+import { centralizeText, formatAddress, formatAmount, formatProductsHeader, includeSpace, justifiyText, alingRightText } from './utils'
 
-export const createTextPlainContent = (order: Order, client: Client, trader: Trader, maxCharLine = 40) => {
+export const createTextPlainContent = (order: Order, client: Client, trader: Trader, maxCharLine = 43) => {
   const header = formatHeader(client, trader)
   const footer = formatFooter(order, trader)
   const orderProducts = formatProducts(order)
@@ -11,7 +11,7 @@ export const createTextPlainContent = (order: Order, client: Client, trader: Tra
     return invoiceTextPlain;
 };
 
-function formatHeader(client: Client, trader: Trader, maxCharLine = 40) {
+function formatHeader(client: Client, trader: Trader, maxCharLine = 43) {
   const header = `
 ${centralizeText(trader.name)}
     
@@ -23,7 +23,7 @@ ${client.address ? `Endereço: ${formatAddress(client.address, 10)}`: ""}
   return header
 }
 
-function formatProducts(order: Order, maxCharLine = 40, maxCharProds = 15) {
+function formatProducts(order: Order, maxCharLine = 43, maxCharProds = 15) {
   let orderProducts = `
 ${'-'.repeat(maxCharLine)}
 ${centralizeText(`PEDIDO #${order.id}`)}
@@ -35,27 +35,17 @@ ${formatProductsHeader()}
     const productAmount = formatAmount(Number(product.amount).toFixed(2));
     const productAmountTotalAmount = formatAmount((Number(product.amount) * product.quantity).toFixed(2));
     
-    let productData = `# ${product.name.substring(0, maxCharProds).toLowerCase()}`;
+    let productData = `# ${formatAddress(product.name.toLowerCase(), 2)}\n`;
 
-    console.log("productData", productData)
-    if (productData.length < maxCharProds + 2) {
-      const diff = maxCharProds + 4 - productData.length
-      productData += includeSpace(diff)
-      console.log("if productData", productData)
-    } else {
-      productData += includeSpace(2)
-      console.log("else productData", productData)
-    }
-
-    productData += `${product.quantity}${includeSpace(2)}${productAmount}${includeSpace(2)}${productAmountTotalAmount}\n`;
+    const formatedProduct = alingRightText(`${product.quantity}${includeSpace(2)}${productAmount}${includeSpace(2)}${productAmountTotalAmount}\n`)
     
-    orderProducts += productData;
+    orderProducts += productData + formatedProduct;
   });
 
   return orderProducts;
 }
 
-function formatFooter(order: Order, trader: Trader, maxCharLine = 40) {
+function formatFooter(order: Order, trader: Trader, maxCharLine = 43) {
   const footer = `
 ${justifiyText('Total Produtos:', `${formatAmount(Number(order.total).toFixed(2))}`)}
 ${justifiyText('Subtotal:', `${formatAmount(Number(order.subtotal).toFixed(2))}`)}
@@ -68,26 +58,19 @@ CONFERÊNCIA
 *ATENÇÃO: Em caso de desacordo com o TIPO
 solicitado, entre em contato conosco para
 procedimento de TROCA, NÃO abra a embalagem
-ou utiliza o starter enviado erroneamente, 
+ou utilize o starter enviado erroneamente, 
 pois nesse caso haverá PERDA DE GARANTIA de 
 novo envio.
 
-O valor cobrado refere-se INTEGRALMENTE as
+O valor cobrado refere-se INTEGRALMENTE as 
 DESPESAS POSTAIS e ao serviço de ASSESSORIA 
 DE CULTIVO. Não trabalhamos com VENDA, 
 enviamos o Starter como DOAÇÃO, MEDIANTE 
 SOLICITAÇÃO DO SERVIÇO DE ASSESSORIA.
 
 ${centralizeText(`${trader.name.toUpperCase()} - ${trader.site}`)}
+. 
 `
 
   return footer
 }
-
-// *ATENÇÃO: Em caso de desacordo com
-// o TIPO solicitado, entre em contato 
-// conosco para procedimento de TROCA, 
-// NÃO abra a embalagem ou utiliza o 
-// starter enviado erroneamente, pois 
-// nesse caso haverá PERDA DE GARANTIA 
-// de novo envio.

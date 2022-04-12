@@ -11,7 +11,7 @@ import { delay } from '../../utils/delay';
 import { amount, cepMask, phoneMask } from '../../utils/formatStrings';
 
 import { createContent } from '../../utils/print/createContent';
-import { Client, Order, Trader, Product } from '../../utils/print/types';
+import { Order, Trader } from '../../utils/print/types';
 
 const fs = window.require("fs");
 const path = window.require("path");
@@ -19,7 +19,6 @@ const childProcess = window.require('child_process')
 
 import createFolder from '../../utils/createFolder';
 import createPDF from '../../utils/createPDF';
-import { values } from '../../../webpack/rules.webpack';
 
 enum FILE_SUBTYPES {
   XLSX = 'vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -79,7 +78,7 @@ const Home: React.FC = () => {
       const cep = cepMask(value[16]);
 
       const orderId = Number(value[0]);
-      const frete = amount(value[17]); // Sem uso por enquanto TODO: Tirar dúvida se tem vendas com frete
+      const frete = amount(value[17]); 
       const subtotal = amount(value[18]);
       const discount = amount(value[19]);
       const paymentMethod = value[26];
@@ -92,7 +91,7 @@ const Home: React.FC = () => {
       const nomeClient = value[4]
       const addressClient = `${value[9]} ${value[10]}, ${value[11] ? value[11] : ''}, ${value[12]}, ${value[13]} - ${value[14]} ${cepMask(value[16])}`
       const phoneClient = phoneMask(value[7])      
-
+      
       if (status === 'Aguardando envio') {
         if (currentOrder?.id === orderId) {
           currentOrder.subtotal += valorProd + discount
@@ -142,8 +141,6 @@ const Home: React.FC = () => {
       }
     });
 
-    // console.log(`orders ${JSON.stringify(orders)}`)
-
     await delay(1000);
     setLoading(false);
     setFormatedData(formatedData);
@@ -157,8 +154,6 @@ const Home: React.FC = () => {
     const pdfFolder = path.join(currentPath, 'pdf');
     const currentDayFolder = path.join(pdfFolder, `${format(new Date(), 'dd-MM-yyyy')}`);
 
-    console.log(currentDayFolder)
-
     createFolder(currentDayFolder)
 
     for (const [key, value] of Object.entries(orderList)) {
@@ -169,13 +164,17 @@ const Home: React.FC = () => {
       })
       
       const file = path.join(currentDayFolder, `${key}.pdf`);
+
+      let imagePath: string
   
-      // Prod - Copiar Assets para dentro de 
-      const imagePath = path.join(__dirname, "..", "..", "..", "..", "assets", "logo.png");
-      
-      // Dev
-      // const imagePath = path.join(__dirname, "..", "..", "..", "..", "..", "..", "assets", "logo.png");
-      
+      if (process.env.NODE_ENV === 'production') {
+        // Prod
+        imagePath = path.join(__dirname, "..", "..", "..", "..", "assets", "logo.png");
+      } else {
+        // Dev
+        imagePath = path.join(__dirname, "..", "..", "..", "..", "..", "..", "assets", "logo.png");
+      }
+
       const imageBuffer = fs.readFileSync(imagePath);
       await createPDF(content, file, imageBuffer);
     }
@@ -207,8 +206,6 @@ const Home: React.FC = () => {
   };
 
   const handleReset = () => {
-    console.log(formatedDataForPDFs)
-
     setLoading(false);
     setHaveFile(false);
     setFormatedData(undefined);
