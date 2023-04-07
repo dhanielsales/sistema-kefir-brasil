@@ -19,6 +19,7 @@ const childProcess = window.require('child_process')
 
 import createFolder from '../../utils/createFolder';
 import createPDF from '../../utils/createPDF';
+import createPDFCorreios from '../../utils/createPDFCorreios';
 
 enum FILE_SUBTYPES {
   XLSX = 'vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -45,7 +46,7 @@ const Home: React.FC = () => {
 
   const handleValidateFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
-    
+
     if (files && files.length > 0) {
       const file = files[0];
       const subtype = file.type.split('/')[1];
@@ -62,6 +63,7 @@ const Home: React.FC = () => {
 
   const handleFormatData = useCallback(async (data: unknown[]) => {
     const formatedData: string[][] = [];
+    const formatedDataCorreios: string[][] = [];
     const formatedDataWithStatus: string[][] = [];
     let currentOrder: Order;
     const orders: OrderList = {};
@@ -78,11 +80,11 @@ const Home: React.FC = () => {
       const cep = cepMask(value[16]);
 
       const orderId = Number(value[0]);
-      const frete = amount(value[17]); 
+      const frete = amount(value[17]);
       const subtotal = amount(value[18]);
       const discount = amount(value[19]);
       const paymentMethod = value[26];
-      
+
       const idProd = Number(value[20]);
       const nomeProd = value[21];
       const valorProd = amount(value[22]);
@@ -90,8 +92,8 @@ const Home: React.FC = () => {
 
       const nomeClient = value[4]
       const addressClient = `${value[9]} ${value[10]}, ${value[11] ? value[11] : ''}, ${value[12]}, ${value[13]} - ${value[14]} ${cepMask(value[16])}`
-      const phoneClient = phoneMask(value[7])      
-      
+      const phoneClient = phoneMask(value[7])
+
       if (status === 'Aguardando envio') {
         if (currentOrder?.id === orderId) {
           currentOrder.subtotal += valorProd + discount
@@ -127,6 +129,7 @@ const Home: React.FC = () => {
         orders[orderId] = currentOrder;
 
         formatedData.push([nome, cep, logradouro, numero, complemento, bairro, cidade, estado]);
+        formatedDataCorreios.push([orderId, nome, cep, logradouro, numero, complemento, bairro, cidade, estado]);
         formatedDataWithStatus.push([
           status,
           nome,
@@ -147,6 +150,7 @@ const Home: React.FC = () => {
     setFormatedDataForPDFs(orders)
 
     await handlePDFs(orders)
+    await handlePDFsCorreios(formatedDataCorreios)
   }, []);
 
   const handlePDFs = useCallback(async (orderList: OrderList) => {
@@ -159,14 +163,14 @@ const Home: React.FC = () => {
     for (const [key, value] of Object.entries(orderList)) {
       const content = await createContent({
         client: value.client,
-        order: value, 
+        order: value,
         trader
       })
-      
+
       const file = path.join(currentDayFolder, `${key}.pdf`);
 
       let imagePath: string
-  
+
       if (process.env.NODE_ENV === 'production') {
         // Prod
         imagePath = path.join(__dirname, "..", "..", "..", "..", "assets", "logo.png");
@@ -178,6 +182,30 @@ const Home: React.FC = () => {
       const imageBuffer = fs.readFileSync(imagePath);
       await createPDF(content, file, imageBuffer);
     }
+}, [])
+
+const handlePDFsCorreios = useCallback(async (data: string[][]) => {
+  const currentPath = process.cwd();
+  const pdfFolder = path.join(currentPath, 'etiquetas');
+  const currentDayFolder = path.join(pdfFolder, `${format(new Date(), 'dd-MM-yyyy')}`);
+
+  createFolder(currentDayFolder)
+  for (const curr of data) {
+    const [orderId, nome, cep, logradouro, numero, complemento, bairro, cidade, estado] = curr
+    const file = path.join(currentDayFolder, `${orderId}.pdf`);
+    const currObj = {
+      nome: String(nome).trim(),
+      cep: String(cep).trim(),
+      logradouro: String(logradouro).trim(),
+      numero: String(numero).trim(),
+      complemento: String(complemento).trim(),
+      bairro: String(bairro).trim(),
+      cidade: String(cidade).trim(),
+      estado: String(estado).trim()
+     }
+
+     await createPDFCorreios(currObj, file);
+  }
 }, [])
 
   const handleFileUpload = () => {
@@ -214,28 +242,26 @@ const Home: React.FC = () => {
 
   return (
     <>
-      <Box d="flex" alignItems="center" justifyContent="center" height="100vh">
+      <Box display="flex" alignItems="center" justifyContent="center" height="100vh">
         <Box
-          d="flex"
+          display="flex"
           alignItems="center"
           justifyContent="center"
           flexDirection="column"
-          height="300px"
+          height="400px"
           width="400px"
           padding="20px"
           border="2px solid"
           borderColor="#3182ce60"
         >
           {loading && (
-            <>
-              <Spinner
-                thickness="4px"
-                speed="0.65s"
-                emptyColor="gray.200"
-                color="#3182ce"
-                size="xl"
-              />
-            </>
+            <Spinner
+              thickness="4px"
+              speed="0.65s"
+              emptyColor="gray.200"
+              color="#3182ce"
+              size="xl"
+            />
           )}
           {!loading && !formatedData && (
             <>
@@ -268,6 +294,14 @@ const Home: React.FC = () => {
               >
                 Formatar arquivo
               </Button>
+              <Button
+                rightIcon={<MdCreateNewFolder />}
+                onClick={() => childProcess.exec(`explorer.exe "${process.cwd()}"`)}
+                colorScheme="blue"
+                marginTop="20px"
+              >
+                Abrir pasta geral
+              </Button>
             </>
           )}
           {!!formatedData && !!formatedDataForPDFs && !loading && (
@@ -293,18 +327,27 @@ const Home: React.FC = () => {
                 colorScheme="blue"
                 marginTop="20px"
               >
-                Abrir pasta com PDFs
+                Abrir pasta com Cupons Fiscais em PDF
               </Button>
 
-              <Text 
-                fontSize="md" 
-                textAlign="center" 
-                onClick={handleReset} 
-                marginTop="20px" 
-                textDecoration="underline" 
-                cursor="pointer" 
-                transition="all .2s" 
-                fontWeight="bold" 
+
+              <Button
+                rightIcon={<MdCreateNewFolder />}
+                onClick={() => childProcess.exec(`explorer.exe "${process.cwd()}\\etiquetas"`)}
+                colorScheme="blue"
+                marginTop="20px"
+              >
+                Abrir pasta com Etiquetas em PDF
+              </Button>
+              <Text
+                fontSize="md"
+                textAlign="center"
+                onClick={handleReset}
+                marginTop="20px"
+                textDecoration="underline"
+                cursor="pointer"
+                transition="all .2s"
+                fontWeight="bold"
                 _hover={{color: "#3182CE"}}
               >
                 Voltar
