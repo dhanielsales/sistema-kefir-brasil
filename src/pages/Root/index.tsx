@@ -194,14 +194,14 @@ const handlePDFsCorreios = useCallback(async (data: string[][]) => {
     const [orderId, nome, cep, logradouro, numero, complemento, bairro, cidade, estado] = curr
     const file = path.join(currentDayFolder, `${orderId}.pdf`);
     const currObj = {
-      nome: String(nome).trim(),
-      cep: String(cep).trim(),
-      logradouro: String(logradouro).trim(),
-      numero: String(numero).trim(),
-      complemento: String(complemento).trim(),
-      bairro: String(bairro).trim(),
-      cidade: String(cidade).trim(),
-      estado: String(estado).trim()
+      nome: nome ? String(nome).trim() : '',
+      cep: cep ? String(cep).trim() : '',
+      logradouro: logradouro ? String(logradouro).trim() : '',
+      numero: numero ? String(numero).trim() : '',
+      complemento: complemento ? String(complemento).trim() : '',
+      bairro: bairro ? String(bairro).trim() : '',
+      cidade: cidade ? String(cidade).trim() : '',
+      estado: estado ? String(estado).trim() : '',
      }
 
      await createPDFCorreios(currObj, file);
