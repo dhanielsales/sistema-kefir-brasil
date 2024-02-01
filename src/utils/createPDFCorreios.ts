@@ -35,7 +35,7 @@ export default async function createPDFCorreios(content: Content, filePath: stri
     const texts: Text[] = [
         {
             title: 'REMETENTE',
-            name: "Verônica C. Rodrigues Sales",
+            name: "Verônica Rodrigues",
             address:  `Duets Office - Rua Gilberto Studart, 55 - Torre Sul, Sala 1018 - Cocó Fortaleza - CE - CEP: 60192-105`
         },
         {
